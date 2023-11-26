@@ -1,0 +1,24 @@
+{
+  "name": "simple-searcher",
+  "short_name": "S",
+  "icons": [
+    {
+      "src": "/public/favicons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/public/favicons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "ms_tile_color": "#000000",
+  "og_type": "website",
+  "og_title": "If you Seek you will get",
+  "og_description": "&#128309; Simple Image Searcher & Bohdan Practice &#128309;",
+  "og_image": "/public/favicons/untitled.svg"
+}
