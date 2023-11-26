@@ -13,7 +13,6 @@ export const SearchForm = ({ onSearch }) => {
       actions.setSubmitting(false);
       actions.resetForm();
     } catch (error) {
-      console.log(error);
       toastCallError();
     }
   };

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Loader } from 'helpers/loader';
 import { SearchBar } from './SearchBar/SearchBar';
 import { ImageGalery } from './ImageGalery/ImageGalery';
@@ -13,145 +13,140 @@ import {
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export class App extends Component {
-  state = {
-    page: null,
-    isLoading: false,
-    images: [],
-    searchValue: '',
-    pagination: 9,
-    heightToMinus: 120,
-  };
+export const App = () => {
+  const [page, setPage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState([]);
+  const [searchValue, setSearchValue] = useState('');
+  const [pagination, setPagination] = useState(9);
+  const [heightToMinus, setHeightToMinus] = useState(120);
+  const [error, setError] = useState(null);
 
-  //Call scrollBottom function after images loaded by pressing load more button
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.images !== this.state.images) {
-      this.scrollBottom();
-    }
-  }
-
-  //Next three Functions - experiment with pagination
-  // bigger screen more images will fetch also calculating
-  // how many pixels need to minus for better experience of use
-  componentDidMount() {
-    this.handleWindowResize();
-    window.addEventListener('resize', this.handleWindowResize);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleWindowResize);
-  }
-  handleWindowResize = () => {
+  // Just for practice checking window screen size for different fetch
+  const handleWindowResize = () => {
     const windowWidth = window.innerWidth;
+
     if (windowWidth >= 1980) {
-      this.setState({ pagination: 16 });
+      setPagination(16);
     } else if (windowWidth >= 1480) {
-      this.setState({ pagination: 12, heightToMinus: 145 });
+      setPagination(12);
+      setHeightToMinus(145);
     } else if (windowWidth <= 768) {
-      this.setState({ pagination: 10, heightToMinus: 640 });
+      setPagination(10);
+      setHeightToMinus(640);
     } else if (windowWidth >= 768) {
-      this.setState({ pagination: 12, heightToMinus: 395 });
+      setPagination(12);
+      setHeightToMinus(395);
     } else {
-      this.setState({ pagination: 9, heightToMinus: 120 });
+      setPagination(9);
+      setHeightToMinus(120);
     }
   };
 
-  //Function witch taking heights,  calculating  and  scrolling to the needed point
-  scrollBottom = () => {
+  // Викликаємо функцію при завантаженні компонента та при зміні розміру вікна
+  useEffect(() => {
+    handleWindowResize();
+    window.addEventListener('resize', handleWindowResize);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, []);
+
+  //Function witch scrolling images straight to new rendered (just for my screen I think -_-)
+  const scrollBottom = useCallback(() => {
     const windowWidth = window.innerWidth;
     if (windowWidth <= 520) {
       return;
     }
     const windowHeight = window.innerHeight;
     const pageHeight = document.documentElement.scrollHeight;
-    const scrollableDistance =
-      pageHeight - windowHeight - this.state.heightToMinus;
+    const scrollableDistance = pageHeight - windowHeight - heightToMinus;
+
     if (scrollableDistance > 0) {
       window.scrollTo({
         top: scrollableDistance,
         behavior: 'smooth',
       });
     }
-  };
+  }, [heightToMinus]);
 
-  //Fetching images by form submission
-  fetchImages = async value => {
+  useEffect(() => {
+    scrollBottom();
+  }, [page, scrollBottom]);
+
+  // Fetch by value function
+  const fetchImages = async value => {
     try {
-      const { page, pagination } = this.state;
-      this.setState({
-        error: false,
-        isLoading: true,
-        searchValue: value,
-        images: [],
-      });
-      const images = await API.getImgs(value, page, pagination);
-      if (!images.hits.length) {
-        this.setState({
-          isLoading: false,
-          page: null,
-        });
+      setError(false);
+      setIsLoading(true);
+      setSearchValue(value);
+      setImages([]);
+
+      const fetchedImages = await API.getImgs(value, page, pagination);
+      const { hits } = fetchedImages;
+
+      if (!hits.length) {
+        setIsLoading(false);
+        setPage(null);
         return toastCallEmpty();
       }
+
       succesToastCall();
-      this.setState(prevState => ({
-        images: images.hits,
-        page: prevState.page + 1,
-        isLoading: false,
-      }));
+      setImages(hits);
+      setPage(page + 1);
+      setIsLoading(false);
     } catch (error) {
-      this.setState({ error: true, isLoading: false });
+      setError(true);
+      setIsLoading(false);
       toastCallError();
     }
   };
 
-  //Fetching images by pressing load more button
-  loadMoreImages = async () => {
-    const { page, searchValue, pagination } = this.state;
-    this.setState({ isLoading: true });
-
+  // Функція для отримання додаткових зображень при натисканні кнопки "Load More"
+  const loadMoreImages = async () => {
+    setIsLoading(true);
     try {
-      const images = await API.getImgs(searchValue, page + 1, pagination);
-      const updatedImages = [...this.state.images, ...images.hits];
-
-      if (!images.hits.length) {
-        this.setState({
-          isLoading: false,
-          page: null,
-        });
-        toastCallEmpty();
+      const fetchedImages = await API.getImgs(
+        searchValue,
+        page + 1,
+        pagination
+      );
+      const { hits: newHits } = fetchedImages;
+      const updatedImages = [...images, ...newHits];
+      if (!newHits.length || newHits.length < pagination) {
+        setImages(updatedImages);
+        setIsLoading(false);
+        setPage(null);
+        toastCallOutOfRange();
       } else {
-        this.setState({
-          images: updatedImages,
-          isLoading: false,
-          page: page + 1,
-        });
+        setImages(updatedImages);
+        setIsLoading(false);
+        setPage(page + 1);
         succesToastCall();
       }
     } catch (error) {
-      this.setState({ error: true, isLoading: false });
-      toastCallOutOfRange();
+      setError(true);
+      setIsLoading(false);
+      toastCallEmpty();
     }
   };
 
-  render() {
-    const { page, isLoading, images, error } = this.state;
-    return (
-      <>
-        <SearchBar onSearch={this.fetchImages} />
-        <ToastContainer />
-        <ImageGalery images={images} />
+  return (
+    <>
+      <SearchBar onSearch={fetchImages} />
+      <ToastContainer />
+      <ImageGalery images={images} />
 
-        {/* Showing loader when loading in state */}
-        {isLoading ? (
-          <div className="fixed top-0 left-0 w-full h-full bg-slate-900 bg-opacity-40 flex justify-center items-center z-30">
-            <Loader />
-          </div>
-        ) : (
-          // showing button after form submission ( at form submission we are giving +1 for the page)
-          page >= 1 && (
-            <LoadMoreButton onClick={this.loadMoreImages} error={error} />
-          )
-        )}
-      </>
-    );
-  }
-}
+      {/* Відображення лоадера при завантаженні */}
+      {isLoading ? (
+        <div className="fixed top-0 left-0 w-full h-full bg-slate-900 bg-opacity-40 flex justify-center items-center z-30">
+          <Loader />
+        </div>
+      ) : (
+        // Відображення кнопки "Load More" після відправки форми
+        page >= 1 && <LoadMoreButton onClick={loadMoreImages} error={error} />
+      )}
+    </>
+  );
+};
