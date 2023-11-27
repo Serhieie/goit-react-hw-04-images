@@ -94,7 +94,7 @@ export const App = () => {
 
       succesToastCall();
       setImages(newHits);
-      setPage(state => state + 1);
+      setPage(1);
       setIsLoading(false);
     } catch (error) {
       setError(true);
