@@ -20,7 +20,7 @@
     "yup": "^1.3.2"
   },
   "scripts": {
-    "c": "git add . && git commit -m 'Automated commit' && git push",
+    "c": "git add . && git commit -m 'new commit' && git push",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
