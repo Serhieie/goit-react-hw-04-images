@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-//Хук від чату gpt, тест для скролу збільшеного фото
+//Chat GPT hook THIS PART OF CODE IM NOT USING THIS IS FOR TEST
 const useScrollBlock = isBlocked => {
   useEffect(() => {
     const scrollHandler = event => {

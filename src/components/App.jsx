@@ -43,7 +43,7 @@ export const App = () => {
     }
   };
 
-  // Викликаємо функцію при завантаженні компонента та при зміні розміру вікна
+  // like componentDidMount lestener of the window width
   useEffect(() => {
     handleWindowResize();
     window.addEventListener('resize', handleWindowResize);
@@ -71,30 +71,32 @@ export const App = () => {
     }
   }, [heightToMinus]);
 
+  //scroll down by pressing button activation of scrollBottom func
   useEffect(() => {
     scrollBottom();
   }, [page, scrollBottom]);
 
   // Fetch by value function
   const fetchImages = async value => {
+    setIsLoading(true);
     try {
       setError(false);
-      setIsLoading(true);
       setSearchValue(value);
       setImages([]);
 
       const fetchedImages = await API.getImgs(value, page, pagination);
-      const { hits } = fetchedImages;
+      const { hits: newHits } = fetchedImages;
+      const updatedImages = [...images, ...newHits];
 
-      if (!hits.length) {
+      if (!newHits.length) {
         setIsLoading(false);
         setPage(null);
         return toastCallEmpty();
       }
 
       succesToastCall();
-      setImages(hits);
-      setPage(page + 1);
+      setImages(updatedImages);
+      setPage(state => state + 1);
       setIsLoading(false);
     } catch (error) {
       setError(true);
@@ -103,7 +105,7 @@ export const App = () => {
     }
   };
 
-  // Функція для отримання додаткових зображень при натисканні кнопки "Load More"
+  // "Load More" button for getting more images from API
   const loadMoreImages = async () => {
     setIsLoading(true);
     try {
@@ -114,6 +116,9 @@ export const App = () => {
       );
       const { hits: newHits } = fetchedImages;
       const updatedImages = [...images, ...newHits];
+
+      console.log(newHits);
+
       if (!newHits.length || newHits.length < pagination) {
         setImages(updatedImages);
         setIsLoading(false);
@@ -122,7 +127,7 @@ export const App = () => {
       } else {
         setImages(updatedImages);
         setIsLoading(false);
-        setPage(page + 1);
+        setPage(state => state + 1);
         succesToastCall();
       }
     } catch (error) {
@@ -138,13 +143,13 @@ export const App = () => {
       <ToastContainer />
       <ImageGalery images={images} />
 
-      {/* Відображення лоадера при завантаженні */}
+      {/* Show loader when donwloading */}
       {isLoading ? (
         <div className="fixed top-0 left-0 w-full h-full bg-slate-900 bg-opacity-40 flex justify-center items-center z-30">
           <Loader />
         </div>
       ) : (
-        // Відображення кнопки "Load More" після відправки форми
+        // Show Load more Button
         page >= 1 && <LoadMoreButton onClick={loadMoreImages} error={error} />
       )}
     </>

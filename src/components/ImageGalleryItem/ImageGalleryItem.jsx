@@ -12,7 +12,7 @@ export const ImageGalleryItem = ({ webformatURL, largeImageURL }) => {
     scrollBlock();
   };
 
-  //Imitation of zoom in open modal
+  //Imitation of zoom in open modal (Imitation beacuse scale method cutting image)
   const toggleZoom = evt => {
     setIsZoomed(!isZoomed);
     const target = evt.currentTarget;
