@@ -25,7 +25,6 @@ export const App = () => {
   // Just for practice checking window screen size for different fetch
   const handleWindowResize = () => {
     const windowWidth = window.innerWidth;
-
     if (windowWidth >= 1980) {
       setPagination(16);
     } else if (windowWidth >= 1480) {
@@ -86,7 +85,6 @@ export const App = () => {
 
       const fetchedImages = await API.getImgs(value, page, pagination);
       const { hits: newHits } = fetchedImages;
-      const updatedImages = [...images, ...newHits];
 
       if (!newHits.length) {
         setIsLoading(false);
@@ -95,13 +93,15 @@ export const App = () => {
       }
 
       succesToastCall();
-      setImages(updatedImages);
+      setImages(newHits);
       setPage(state => state + 1);
       setIsLoading(false);
     } catch (error) {
       setError(true);
       setIsLoading(false);
       toastCallError();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -117,23 +117,20 @@ export const App = () => {
       const { hits: newHits } = fetchedImages;
       const updatedImages = [...images, ...newHits];
 
-      console.log(newHits);
-
       if (!newHits.length || newHits.length < pagination) {
         setImages(updatedImages);
-        setIsLoading(false);
         setPage(null);
         toastCallOutOfRange();
       } else {
         setImages(updatedImages);
-        setIsLoading(false);
         setPage(state => state + 1);
         succesToastCall();
       }
     } catch (error) {
       setError(true);
-      setIsLoading(false);
       toastCallEmpty();
+    } finally {
+      setIsLoading(false);
     }
   };
 
